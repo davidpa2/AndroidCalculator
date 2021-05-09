@@ -5,6 +5,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -37,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
         pasarNumero(3);
     }
     public void boton4(View v){
-        pasarNumero(5);
+        pasarNumero(4);
     }
     public void boton5(View v){
         pasarNumero(5);
@@ -57,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
     public void botonPunto(View v){
         if (!pulsadoNumero) { //Si no se ha pulsado antes ningún número no se puede introducir un punto
             vaciarTextViews();
+            notificacion();
         } else {
             textViewCuenta =  (TextView) findViewById(R.id.textViewCuenta);
             textViewCuenta.setText(textViewCuenta.getText() + ".");
@@ -66,10 +68,13 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    //Operadores
     public void botonSuma(View v){
-        if (!pulsadoNumero) { //Si no se ha pulsado ningún número antes, no se puede pulsar la suma
+        //Si no se ha pulsado ningún número antes, no se puede pulsar la suma
+        //O si ya se ha pulsado una suma, no se puede volver a pulsar
+        if (!pulsadoNumero || pulsadoOperador) {
             vaciarTextViews();
-
+            notificacion();
         } else {
             pasarOperador("+");
             cambioNumero(v);
@@ -77,9 +82,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void botonResta(View v){
-        if (!pulsadoNumero) { //Si no se ha pulsado ningún número antes, no se puede pulsar la resta
+        //Si no se ha pulsado ningún número antes, no se puede pulsar la resta
+        //O si ya se ha pulsado una resta, no se puede volver a pulsar
+        if (!pulsadoNumero || pulsadoOperador) {
             vaciarTextViews();
-
+            notificacion();
         } else {
             pasarOperador("-");
             cambioNumero(v);
@@ -87,9 +94,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void botonMultiplicar(View v){
-        if (!pulsadoNumero) { //Si no se ha pulsado ningún número antes,no se puede pulsar la multiplicación
+        //Si no se ha pulsado ningún número antes, no se puede pulsar la multiplicación
+        //O si ya se ha pulsado una multiplicación, no se puede volver a pulsar
+        if (!pulsadoNumero || pulsadoOperador) {
             vaciarTextViews();
-
+            notificacion();
         } else {
             pasarOperador("x");
             cambioNumero(v);
@@ -97,9 +106,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void botonDividir(View v){
-        if (pulsadoNumero == false) {// Si no se ha pulsado ningún número, no se puede pulsar la división
+        //Si no se ha pulsado ningún número antes, no se puede pulsar la división
+        //O si ya se ha pulsado una división, no se puede volver a pulsar
+        if (!pulsadoNumero || pulsadoOperador) {
             vaciarTextViews();
-
+            notificacion();
         } else {
             pasarOperador("/");
             cambioNumero(v);
@@ -111,21 +122,30 @@ public class MainActivity extends AppCompatActivity {
      * @param v
      */
     public void botonIgual(View v){
-        if (!pulsadoOperador) { //Si no se ha pulsado un operador antes, no se puede pulsar igual
+        //Si no se ha pulsado un operador antes, no se puede pulsar igual
+        //O si no se ha pulsado ningún número tampoco
+        if (!pulsadoOperador || !pulsadoNumero) {
             vaciarTextViews();
-
+            notificacion();
         } else {
+            //Guardar el numero 2 para hacer la operación
             textViewNum = (TextView)findViewById(R.id.textViewNum);
             num2 = Float.parseFloat(textViewNum.getText().toString());
+
             //Hay que detectar cuál es el operador para realizar la cuenta deseada
-            if(operador.equals("+")){
-                resultado =  num1 + num2;
-            }   else  if(operador.equals("-")){
-                resultado =  num1 - num2;
-            }   else  if(operador.equals("x")){
-                resultado =  num1 * num2;
-            }   else  if(operador.equals("/")){
-                resultado =  num1 / num2;
+            switch (operador) {
+                case "+":
+                    resultado = num1 + num2;
+                    break;
+                case "-":
+                    resultado = num1 - num2;
+                    break;
+                case "x":
+                    resultado = num1 * num2;
+                    break;
+                case "/":
+                    resultado = num1 / num2;
+                    break;
             }
             textViewNum.setText("" + resultado);
 
@@ -135,13 +155,17 @@ public class MainActivity extends AppCompatActivity {
             String result = textView.getText().toString();
             intent.putExtra(EXTRA_MESSAGE, result);
             startActivity(intent);
+
+            //Es importante vaciar los TextViews por si se vuelve a la MainActivity con el botón de volver
+            //de Android y no con el de la aplicación
+            vaciarTextViews();
         }
 
     }
 
     /**
      * Método encargado de concatenar los TextViews el número que se pulse
-     * @param n número que nos pasen
+     * @param n número que nos pasan
      */
     public void pasarNumero(int n){
         String num = "" + n;
@@ -170,6 +194,8 @@ public class MainActivity extends AppCompatActivity {
         num1 = Float.parseFloat(textViewNum.getText().toString());
         textViewNum.setText("");
         pulsadoOperador = true;
+        //Como se cambia el número para almacenar el nuevo, hay que volver a decir que no se ha pulsado número
+        pulsadoNumero = false;
     }
 
     /**
@@ -181,6 +207,18 @@ public class MainActivity extends AppCompatActivity {
         textViewCuenta.setText("");
         textViewNum =  (TextView) findViewById(R.id.textViewNum);
         textViewNum.setText("");
+        //Si se vacian los TextViews hay que volver a decir que no se han pulsado operadores ni numeros
+        pulsadoOperador = false;
+        pulsadoNumero = false;
+    }
+
+    /**
+     * Si se pulsa un botón inadecuadamente se avisará al usuario
+     */
+    public void notificacion(){
+        Toast toast1 = Toast.makeText(getApplicationContext(),
+                "No es posible hacer eso", Toast.LENGTH_SHORT);
+        toast1.show();
     }
 
 }
